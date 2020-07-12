@@ -1,9 +1,16 @@
 #ifndef CONSOLE_ConsoleColorizer_H
 #define CONSOLE_ConsoleColorizer_H
 
+// If you don't want to use the ColorText class, then disable it here
+#define USING_COLOR_TEXT true
+
 #define SET_FONT_COLOR(c) ConsoleColorizer::getInstance().setTextColor(c)
 #define RESET_CONSOLE_FONT() ConsoleColorizer::getInstance().setTextColor(15)
 #define WRITE_CONSOLE_ERROR(errorLocation, errorDescription) ConsoleColorizer::getInstance().writeError(errorLocation, errorDescription)
+
+#if USING_COLOR_TEXT
+#define INLINE_COLOR_FONT(s, c) ColorText(s, c)
+#endif
 
 #define FONT_BLACK		0
 #define FONT_BLUE		1
@@ -64,6 +71,23 @@ public:
 		SetConsoleTextAttribute(consoleHandler, c);
 	}
 
+	// This function is primarily used for setting inline color changes that don't change the current stored color
+	void temporaryTextColor(int c = 15)
+	{
+		if (c < 0 || c > 15)
+		{
+			WRITE_CONSOLE_ERROR("ConsoleColorizer", "Please keep text color in the integer set [0, 15]");
+		}
+
+		SetConsoleTextAttribute(consoleHandler, c);
+	}
+
+	// If you have set a temporary color, you will need to call this after to restore the console to the prior color
+	void resetTemporaryTextColor()
+	{
+		SetConsoleTextAttribute(consoleHandler, currentColor);
+	}
+
 	void writeError(const char* errorLocation, const char* errorDescription)
 	{
 		SetConsoleTextAttribute(consoleHandler, 4);
@@ -83,5 +107,31 @@ private:
 
 
 };
+
+#if USING_COLOR_TEXT
+
+// This can be used to inline color text in an outstream
+class ColorText
+{
+public:
+	std::string text;
+	int color;
+
+	ColorText(std::string text, int color) : text{ text }, color{ color }
+	{}
+};
+
+std::ostream& operator<<(std::ostream& os, const ColorText& ct)
+{
+	ConsoleColorizer::getInstance().temporaryTextColor(ct.color);
+
+	std::cout << ct.text;
+
+	ConsoleColorizer::getInstance().resetTemporaryTextColor();
+
+	return os;
+}
+
+#endif
 
 #endif // !CONSOLE_ConsoleColorizer_H
