@@ -117,7 +117,7 @@ public:
 	std::string text;
 	int color;
 
-	ColorText(std::string text, int color) : text{ text }, color{ color }
+	ColorText(const char* text, int color) : text{ text }, color{ color }
 	{}
 };
 
