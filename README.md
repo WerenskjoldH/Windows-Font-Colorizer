@@ -1,6 +1,6 @@
 <p align="center"><img width=100% src="media/consoleColorizerTitle.png"></p>
 
-<h4 align="center">Windows Console Text Coloring Header-Only Library</p>
+<h4 align="center">Windows Console Text Coloring Header-Only Helper Library</p>
 
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 [![Repository Size](https://img.shields.io/github/repo-size/WerenskjoldH/Windows-Font-Colorizer)]()
