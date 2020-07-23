@@ -1,12 +1,12 @@
 #ifndef CONSOLE_ConsoleColorizer_H
 #define CONSOLE_ConsoleColorizer_H
 
-// If you don't want to use the ColorText class, then disable it here
 #define USING_COLOR_TEXT true
 
-#define SET_FONT_COLOR(c) ConsoleColorizer::getInstance().setTextColor(c)
-#define RESET_CONSOLE_FONT() ConsoleColorizer::getInstance().setTextColor(15)
-#define WRITE_CONSOLE_ERROR(errorLocation, errorDescription) ConsoleColorizer::getInstance().writeError(errorLocation, errorDescription)
+#define SET_FONT_COLOR(c) ConsoleColorizer::getInstance().SetTextColor(c)
+#define RESET_CONSOLE_FONT() ConsoleColorizer::getInstance().SetTextColor(15)
+#define WRITE_CONSOLE_ERROR(errorLocation, errorLevel, errorDescription) ConsoleColorizer::getInstance().WriteError(errorLocation, errorLevel, errorDescription)
+#define WRITE_CONSOLE_WARNING(warningLocation, warningLevel, warningDescription) ConsoleColorizer::getInstance().WriteWarning(warningLocation, warningLevel, warningDescription)
 
 #if USING_COLOR_TEXT
 #define INLINE_COLOR_FONT(s, c) ColorText(s, c)
@@ -22,7 +22,10 @@
 #define FONT_YELLOW		14
 #define FONT_WHITE		15
 
+// This should reduce slim down Windows.h and improve compile time
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+
 #include <iostream>
 
 class ConsoleColorizer
@@ -38,7 +41,7 @@ public:
 	// This is a C++11 feature that prohibits the copying of a method
 	// We are able to ensure the method is inaccessible in all cases as the compiler will not even bother to generate the function
 	// P.S. this is only allowed for this case, if you want a purely virual method, then set "= 0"
-	ConsoleColorizer(ConsoleColorizer  const&)	 = delete;
+	ConsoleColorizer(ConsoleColorizer  const&) = delete;
 	void operator=(ConsoleColorizer const&) = delete;
 
 	// c is a value from 0 to 15:
@@ -60,11 +63,11 @@ public:
 		14	-	YELLOW
 		15	-	WHITE
 	*/
-	void setTextColor(int c = 15)
+	void SetTextColor(int c = 15)
 	{
 		if (c < 0 || c > 15)
 		{
-			WRITE_CONSOLE_ERROR("ConsoleColorizer", "Please keep text color in the integer set [0, 15]");
+			WRITE_CONSOLE_ERROR("ConsoleColorizer", "WARNING", "Please keep text color in the integer set [0, 15]");
 		}
 
 		currentColor = c;
@@ -72,26 +75,33 @@ public:
 	}
 
 	// This function is primarily used for setting inline color changes that don't change the current stored color
-	void temporaryTextColor(int c = 15)
+	void TemporaryTextColor(int c = 15)
 	{
 		if (c < 0 || c > 15)
 		{
-			WRITE_CONSOLE_ERROR("ConsoleColorizer", "Please keep text color in the integer set [0, 15]");
+			WRITE_CONSOLE_ERROR("ConsoleColorizer", "WARNING", "Please keep text color in the integer set [0, 15]");
 		}
 
 		SetConsoleTextAttribute(consoleHandler, c);
 	}
 
 	// If you have set a temporary color, you will need to call this after to restore the console to the prior color
-	void resetTemporaryTextColor()
+	void ResetTemporaryTextColor()
 	{
 		SetConsoleTextAttribute(consoleHandler, currentColor);
 	}
 
-	void writeError(const char* errorLocation, const char* errorDescription)
+	void WriteError(const char* errorLocation, const char* errorLevel, const char* errorDescription)
 	{
-		SetConsoleTextAttribute(consoleHandler, 4);
-		printf("ERROR::%s::%s\n", errorLocation, errorDescription);
+		SetConsoleTextAttribute(consoleHandler, FONT_RED);
+		printf("ERROR::%s::%s::%s\n", errorLocation, errorLevel, errorDescription);
+		SET_FONT_COLOR(currentColor);
+	}
+
+	void WriteWarning(const char* warningLocation, const char* warningLevel, const char* warningDescription)
+	{
+		SetConsoleTextAttribute(consoleHandler, FONT_YELLOW);
+		printf("WARNING::%s::%s::%s\n", warningLocation, warningLevel, warningDescription);
 		SET_FONT_COLOR(currentColor);
 	}
 
@@ -123,15 +133,15 @@ public:
 
 inline std::ostream& operator<<(std::ostream& os, const ColorText& ct)
 {
-	ConsoleColorizer::getInstance().temporaryTextColor(ct.color);
+	ConsoleColorizer::getInstance().TemporaryTextColor(ct.color);
 
 	std::cout << ct.text;
 
-	ConsoleColorizer::getInstance().resetTemporaryTextColor();
+	ConsoleColorizer::getInstance().ResetTemporaryTextColor();
 
 	return os;
 }
 
 #endif
 
-#endif // !CONSOLE_ConsoleColorizer_H
+#endif
